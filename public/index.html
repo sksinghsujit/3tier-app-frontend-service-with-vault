@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>3-Tier OpenShift App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f9; }
+    .container { max-width: 500px; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    h2 { color: #cc0000; } /* Red Hat style */
+    input[type="text"] { width: 70%; padding: 10px; margin-right: 5px; }
+    button { padding: 10px 15px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    ul { list-style-type: none; padding: 0; margin-top: 20px; }
+    li { background: #eef2f5; margin-bottom: 8px; padding: 10px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>3-Tier Application</h2>
+    <p>OpenShift + Helm + PostgreSQL Demo</p>
+    <div>
+      <input type="text" id="taskInput" placeholder="Enter a new task...">
+      <button onclick="addTodo()">Add Task</button>
+    </div>
+    <ul id="todoList"></ul>
+  </div>
+
+  <script>
+    // Relative API endpoint or path dynamically set by OpenShift Route / Ingress
+    const API_URL = '/api/todos';
+
+    async function fetchTodos() {
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        const list = document.getElementById('todoList');
+        list.innerHTML = '';
+        data.forEach(item => {
+          const li = document.createElement('li');
+          li.textContent = `${item.id}. ${item.task}`;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        console.error('Failed to fetch todos:', err);
+      }
+    }
+
+    async function addTodo() {
+      const input = document.getElementById('taskInput');
+      if (!input.value) return;
+
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ task: input.value })
+        });
+        input.value = '';
+        fetchTodos();
+      } catch (err) {
+        console.error('Failed to add todo:', err);
+      }
+    }
+
+    // Load list on startup
+    fetchTodos();
+  </script>
+</body>
+</html>
